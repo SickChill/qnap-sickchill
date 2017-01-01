@@ -1,3 +1,4 @@
+#!/bin/bash
 ######################################################################
 # List of available definitions (it's not necessary to uncomment them)
 ######################################################################
@@ -116,60 +117,144 @@
 # Define any package specific initialization that shall be performed
 # before the package is installed.
 ######################################################################
-#pkg_init(){
-#}
-#
+pkg_init(){
+    export PATH=/Apps/bin:/Apps/bin/git/bin:/Apps/opt/bin:/opt/QPython2/bin:/opt/bin:/usr/local/bin:/usr/bin:/bin:$PATH
+
+    # Check for git
+    if [ -x /etc/init.d/git.sh ]; then
+        $CMD_ECHO "  Starting git..."
+        /etc/inhit.d/git.sh start
+        $CMD_SLEEP 3
+    fi
+
+    CMD_GIT=$($CMD_GETCFG Git path -u -d None -f /etc/config/qpkg.conf)
+    [ -x $CMD_GIT ] && return
+    CMD_GIT=$(which git)
+    VER=0
+    [ -x $CMD_GIT ] && VER=$(expr substr "$($CMD_GIT --version 2>&1)" 13 13)
+    for path in $(echo $PATH | tr ':' "\n"); do
+        echo "Looking for $path/git"
+        [ -x path/git ] || continue
+        version=$(expr substr "$($path/git --version 2>&1)" 13 13)
+        if [ $version > $VER ]; then
+            CMD_GIT=$path/git
+            VER=$version
+        fi
+    done
+    if [ ! -x $CMD_GIT ]; then
+        log_warn "Git not found, SickRage will be installed git-less"
+    else
+        log "Found Git Version ${VER} at ${CMD_GIT}"
+    fi
+    $CMD_SETCFG Git path $CMD_GIT -f /etc/config/qpkg.conf
+    export CMD_GIT=$CMD_GIT
+
+    # Find best Python.7
+    CMD_PYTHON2=$($CMD_GETCFG Python2 path -u -d None -f /etc/config/qpkg.conf)
+    [ -x $CMD_PYTHON2 ] && return
+    CMD_PYTHON2=$(which python2.7)
+    VER=0
+    [ -x $CMD_PYTHON2 ] && VER=$(expr substr "$($CMD_PYTHON2 -V 2>&1)" 8 8)
+    for path in $(echo $PATH | tr ':' "\n"); do
+        echo "Looking for $path/python2.7"
+        [ -x path/python2.7 ] || continue
+        version=$(expr substr "$(${path}/python2.7 -V 2>&1)" 8 8)
+        [ $version == 2.7* ] || continue
+        if [ $version > $VER ]; then
+            CMD_PYTHON2=$path/python2.7
+            VER=$version
+        fi
+    done
+    if [ -x $CMD_PYTHON2 ]; then
+        log "Found Python Version ${VER} at ${CMD_PYTHON2}"
+        $CMD_SETCFG Python2 path $CMD_PYTHON2 -f /etc/config/qpkg.conf
+    fi
+    export CMD_PYTHON2=$CMD_PYTHON2
+
+}
+
 ######################################################################
 # Define any package specific requirement checks that shall be
 # performed before the package is installed.
 ######################################################################
 pkg_check_requirement(){
-    #check for an internet connection
-    #/bin/echo -n "Checking for internet: "
-    #$CMD_WGET -q --tries=5 --timeout=5 http://www.google.com -O /tmp/index.google &> /dev/null
-    #if [ ! -s /tmp/index.google ]; then
-    #   err_log "No Internet connection found (can't reach www.google.com)"
-    #else
-    #   /bin/echo "Found!"
-    #   $CMD_RM /tmp/index.google
-    #fi
-#
-#}
+    check for an internet connection
+    $CMD_ECHO -n "Checking for internet: "
+    $CMD_WGET -q --tries=5 --timeout=5 http://www.google.com -O /tmp/index.google &> /dev/null
+    if [ ! -s /tmp/index.google ]; then
+       err_log "No Internet connection found (can't reach www.google.com)"
+    else
+       $CMD_ECHO "Found!"
+       $CMD_RM /tmp/index.google
+    fi
+
+    [ -x $CMD_PYTHON2 ] || log_error "Python was not found. Please re-install the Python qpkg."
+}
 ######################################################################
 # Define any package specific operations that shall be performed when
 # the package is installed.
 ######################################################################
 pkg_pre_install(){
-#copy important files to the tempdir
-[ -d $SYS_QPKG_DIR.$$ ] || $CMD_MKDIR $SYS_QPKG_DIR.$$
-if [ -f $SYS_QPKG_DIR/config.ini ]; then
-    $CMD_MKDIR $SYS_QPKG_DIR.$$/config
-    $CMD_CP $SYS_QPKG_DIR/config.ini $SYS_QPKG_DIR.$$/config
-    [ -f $SYS_QPKG_DIR/sickbeard.db ] && $CMD_CP $SYS_QPKG_DIR/sickbeard.db $SYS_QPKG_DIR.$$/config
-    [ -f $SYS_QPKG_DIR/cache.db ] && $CMD_CP $SYS_QPKG_DIR/cache.db $SYS_QPKG_DIR.$$/config
-    [ -d $SYS_QPKG_DIR/cache ] && $CMD_CP -r $SYS_QPKG_DIR/cache $SYS_QPKG_DIR.$$/config
-    [ -d $SYS_QPKG_DIR/cache ] && $CMD_CP -r $SYS_QPKG_DIR/cache $SYS_QPKG_DIR.$$/config
-else
-    [ -d $SYS_QPKG_DIR/config ]  && $CMD_CP -rf $SYS_QPKG_DIR/config $SYS_QPKG_DIR.$$
-fi
-/bin/sync
+    #copy important files to the tempdir
+    [ -d $SYS_QPKG_DIR.$$ ] || $CMD_MKDIR $SYS_QPKG_DIR.$$
+    if [ -f $SYS_QPKG_DIR/config.ini ]; then
+        $CMD_MKDIR $SYS_QPKG_DIR.$$/config
+        $CMD_CP $SYS_QPKG_DIR/config.ini $SYS_QPKG_DIR.$$/config
+        [ -f $SYS_QPKG_DIR/sickbeard.db ] && $CMD_CP $SYS_QPKG_DIR/sickbeard.db $SYS_QPKG_DIR.$$/config
+        [ -f $SYS_QPKG_DIR/cache.db ] && $CMD_CP $SYS_QPKG_DIR/cache.db $SYS_QPKG_DIR.$$/config
+        [ -d $SYS_QPKG_DIR/cache ] && $CMD_CP -r $SYS_QPKG_DIR/cache $SYS_QPKG_DIR.$$/config
+        [ -d $SYS_QPKG_DIR/cache ] && $CMD_CP -r $SYS_QPKG_DIR/cache $SYS_QPKG_DIR.$$/config
+    else
+        [ -d $SYS_QPKG_DIR/config ]  && $CMD_CP -rf $SYS_QPKG_DIR/config $SYS_QPKG_DIR.$$
+    fi
+    $CMD_SYNC
 
-#completely remove the old dir
-$CMD_RM -rf $SYS_QPKG_DIR
-/bin/sleep 5 #without sleep this sometimes fails, expect this is a timing issue.
-/bin/sync
+    #completely remove the old dir
+    $CMD_RM -rf $SYS_QPKG_DIR
+    $CMD_SLEEP 5 #without sleep this sometimes fails, expect this is a timing issue.
+    $CMD_SYNC
 
-#move the temp dir to the new dir
-$CMD_MV $SYS_QPKG_DIR.$$ $SYS_QPKG_DIR
-}
-#feed some important stuff to the config file
-$CMD_MKDIR -p $SYS_QPKG_DIR/config/
-$CMD_TOUCH $SYS_QPKG_DIR/config/config.ini
-$CMD_SETCFG General web_port 7073 -f $SYS_QPKG_DIR/config/config.ini
-$CMD_SETCFG General git_path /Apps/bin/git -f $SYS_QPKG_DIR/config/config.ini
-
+    #move the temp dir to the new dir
+    $CMD_MV $SYS_QPKG_DIR.$$ $SYS_QPKG_DIR
 }
 
-#
-#pkg_post_install(){
-#}
+install_with_git(){
+    if [ -x $CMD_GIT ]; then
+        log "Trying to install using git"
+        GIT_URL=git@github.com:SickRage/SickRage.git
+        HTTPS_URL=https://github.com/SickRage/SickRage.git
+        [ -d $SYS_QPKG_DIR/.git ] || git clone --depth 1 $GIT_URL $SYS_QPKG_DIR || git clone --depth 1 $HTTPS_URL $SYS_QPKG_DIR
+        [ $? -ne 0 ] && log_warn "Git is broken, trying to install from tarball" && $CMD_RM -r $SYS_QPKG_DIR/sickrage
+        CUR_COMMIT=$(git rev-parse HEAD)
+        [ $? -ne 0 ] && log_warn "Git is broken, trying to install from tarball" && $CMD_RM -r $SYS_QPKG_DIR/sickrage
+    fi
+}
+
+install_from_tarball(){
+    if [ ! -d $SYS_QPKG_DIR/sickrage ]; then
+        log "Trying to install from tarball"
+        cd $SYS_QPKG_DIR
+        CUR_COMMIT=$($CMD_WGET -qO - https://api.github.com/repos/SickRage/SickRage/branches/master | sed -e '/"sha"/!d' -e 's/\s*"sha": "\|",$//g' | head -n1)
+        [ ! -z $CUR_COMMIT ] || log_error "Could not determine newest SickRage commit, try again later"
+        $CMD_WGET -qO- https://github.com/SickRage/SickRage/archive/master.tar.gz | tar xzvf --strip=1 --unlink-first || log_error "Could download and extract the source"
+    fi
+}
+
+pkg_install(){
+    log "Installing QSickRage"
+    install_with_git
+    install_from_tarball
+
+    $CMD_MKDIR -p $SYS_QPKG_DIR/config/
+    $CMD_TOUCH $SYS_QPKG_DIR/config/config.ini
+    $CMD_SETCFG General web_port 7073 -f $SYS_QPKG_DIR/config/config.ini
+    $CMD_SETCFG General cur_commit_hash $CUR_COMMIT -f $SYS_QPKG_DIR/config/config.ini
+    $CMD SETCFG General launch_browser 0 -f $SYS_QPKG_DIR/config/config.ini
+    if [ -x $CMD_GIT ]; then
+        $CMD SETCFG General git_path $CMD_GIT -f $SYS_QPKG_DIR/config/config.ini
+    else
+        $CMD SETCFG General git_path "" -f $SYS_QPKG_DIR/config/config.ini
+    fi
+
+    $CMD_SYNC
+}
