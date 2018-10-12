@@ -1,8 +1,8 @@
 #! /bin/sh
 
-QPKG_NAME=QSickRage
+QPKG_NAME=QSickChill
 QPKG_DIR=$(/sbin/getcfg $QPKG_NAME Install_Path -f /etc/config/qpkg.conf)
-PID_FILE="$QPKG_DIR/config/sickrage.pid"
+PID_FILE="$QPKG_DIR/config/sickchill.pid"
 
 DAEMON_OPTS="SickBeard.py --datadir $QPKG_DIR/config --daemon --pidfile $PID_FILE --port 7073"
 
@@ -94,8 +94,8 @@ CheckQpkgRunning() { #Is the QPKG already running? if so, exit the script
 UpdateQpkg(){ # does a git pull to update to the latest code
   /bin/echo "Updating $QPKG_NAME"
   #The url to the git repository we're going to install
-  GIT_URL=git@github.com:SickRage/SickRage.git
-  GIT_URL1=https://github.com/SickRage/SickRage.git
+  GIT_URL=git@github.com:SickChill/SickChill.git
+  GIT_URL1=https://github.com/SickChill/SickChill.git
   #git clone/pull the qpkg
   [ -d $QPKG_DIR/$QPKG_NAME/.git ] || git clone --depth 1 $GIT_URL $QPKG_DIR/$QPKG_NAME || git clone --depth 1 $GIT_URL1 $QPKG_DIR/$QPKG_NAME
   cd $QPKG_DIR/$QPKG_NAME && git reset --hard HEAD && git pull && /bin/sync

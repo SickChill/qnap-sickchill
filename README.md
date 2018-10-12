@@ -1,13 +1,13 @@
-# QSickRage
+# QSickChill
 
-SickRage server for QNAP NAS.
+SickChill server for QNAP NAS.
 
-SickRage server is automatically pulled from git repository when the package is installed. The repository used is https://github.com/SickRage/SickRage/.
+SickChill server is automatically pulled from git repository when the package is installed. The repository used is https://github.com/SickChill/SickChill/.
 
 # Install
 
 - Install Git and Python (use the community Python version from http://apps.qnap.community/)
-- You can download the latest QPKG packages here https://github.com/SickRage/qnap-sickrage/releases.
+- You can download the latest QPKG packages here https://github.com/SickChill/qnap-sickchill/releases.
 
 # Contribute
 
@@ -21,12 +21,13 @@ SickRage server is automatically pulled from git repository when the package is 
 
 - The package is created under `build/` directory.
 
-- Install it by the AppCenter or via the command line `bash build/QSickRage_*.qpkg`.
+- Install it by the AppCenter or via the command line `bash build/QSickChill_*.qpkg`.
 
 # Authors
 
 - clinton-hall
 - hadim
+- miigotu
 
 # License
 
